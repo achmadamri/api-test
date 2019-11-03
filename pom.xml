@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.api.mt.auth</groupId>
-	<artifactId>mt-auth-api</artifactId>
+	<artifactId>api-mt-auth</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>mt-auth-api</name>
+	<name>api-mt-auth</name>
 	<description>Demo project for Spring Boot</description>
 
 	<properties>
