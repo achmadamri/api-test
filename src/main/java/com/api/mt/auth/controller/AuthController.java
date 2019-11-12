@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Example;
 import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,8 +19,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.api.mt.auth.db.entity.TbAuth;
@@ -32,11 +31,12 @@ import com.api.mt.auth.model.auth.AuthCheckRequestModel;
 import com.api.mt.auth.model.auth.AuthCheckResponseModel;
 import com.api.mt.auth.model.auth.AuthGenerateRequestModel;
 import com.api.mt.auth.model.auth.AuthGenerateResponseModel;
+import com.api.mt.auth.model.auth.AuthInvalidateRequestModel;
 import com.api.mt.auth.model.auth.AuthInvalidateResponseModel;
 import com.api.mt.auth.util.MD5;
 import com.api.mt.auth.util.SimpleMapper;
 import com.api.mt.auth.util.TokenUtil;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.api.mt.auth.util.Uid;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.jsonwebtoken.Claims;
@@ -61,9 +61,12 @@ public class AuthController {
 	
 	@PostMapping("/add")
 	@Transactional
-	public HttpEntity<?> postAdd(@RequestHeader HttpHeaders headers, @Valid @RequestBody AuthAddRequestModel requestModel) throws Exception {
+	public HttpEntity<?> postAdd(@Valid @RequestBody AuthAddRequestModel requestModel) throws Exception {
+		String fid = new Uid().generateString(20);
+		log.info("[fid:" + fid + "] requestModel : " + objectMapper.writeValueAsString(requestModel));
+		
 		SimpleMapper simpleMapper = new SimpleMapper();
-		AuthAddResponseModel responseModel = new AuthAddResponseModel(headers);
+		AuthAddResponseModel responseModel = new AuthAddResponseModel(requestModel);
 		ResponseEntity<?> responseEntity = null;
 		
 		TbAuth exampleTbAuth = new TbAuth();
@@ -86,18 +89,21 @@ public class AuthController {
 		});
 		
 		responseEntity = new ResponseEntity<>(responseModel, responseModel.getStatus().equals("208") ? HttpStatus.ALREADY_REPORTED : HttpStatus.OK);
-		log.info("postAdd responseEntity : " + objectMapper.writeValueAsString(responseEntity));
+		log.info("[fid:" + fid + "] responseEntity : " + objectMapper.writeValueAsString(responseEntity));
 
 		return responseEntity;
 	}
 	
 	@PostMapping("/generate")
 	@Transactional
-	public HttpEntity<?> postGenerate(@RequestHeader HttpHeaders headers, @Valid @RequestBody AuthGenerateRequestModel requestModel) throws Exception {
+	public HttpEntity<?> postGenerate(@Valid @RequestBody AuthGenerateRequestModel requestModel) throws Exception {
+		String fid = new Uid().generateString(20);
+		log.info("[fid:" + fid + "] requestModel : " + objectMapper.writeValueAsString(requestModel));
+		
 		MD5 md5 = new MD5();
 		requestModel.setTbaPassword(md5.get(requestModel.getTbaPassword()));
 		
-		AuthGenerateResponseModel responseModel = new AuthGenerateResponseModel(headers);
+		AuthGenerateResponseModel responseModel = new AuthGenerateResponseModel(requestModel);
 		ResponseEntity<?> responseEntity = null;
 		
 		TbAuth exampleTbAuth = new TbAuth();
@@ -111,9 +117,9 @@ public class AuthController {
 			});
 			
 			try {
-				headers.set("email", optTbAuth.get().getTbaEmail());
-				headers.set("token", token);
-				Claims claims = tokenUtil.claims(headers);
+				requestModel.setEmail(optTbAuth.get().getTbaEmail());
+				requestModel.setToken(token);
+				Claims claims = tokenUtil.claims(requestModel);
 				responseModel.setClaims(claims);
 				
 				responseModel.setToken(token);
@@ -129,21 +135,22 @@ public class AuthController {
 		});
 		
 		responseEntity = new ResponseEntity<>(responseModel, responseModel.getStatus().equals("200") ? HttpStatus.OK : (responseModel.getStatus().equals("500") ? HttpStatus.INTERNAL_SERVER_ERROR : HttpStatus.UNAUTHORIZED));
-		log.info("postGenerate responseEntity : " + objectMapper.writeValueAsString(responseEntity));
+		log.info("[fid:" + fid + "] responseEntity : " + objectMapper.writeValueAsString(responseEntity));
 
 		return responseEntity;
 	}
 	
 	@PostMapping("/check")
 	@Transactional
-	public HttpEntity<?> postCheck(@RequestHeader HttpHeaders headers, @Valid @RequestBody AuthCheckRequestModel requestModel) throws Exception {
-		AuthCheckResponseModel responseModel = new AuthCheckResponseModel(headers);
+	public HttpEntity<?> postCheck(@Valid @RequestBody AuthCheckRequestModel requestModel) throws Exception {
+		String fid = new Uid().generateString(20);
+		log.info("[fid:" + fid + "] requestModel : " + objectMapper.writeValueAsString(requestModel));
+		
+		AuthCheckResponseModel responseModel = new AuthCheckResponseModel(requestModel);
 		ResponseEntity<?> responseEntity = null;
 		
 		try {
-			headers.set("email", requestModel.getTbaEmail());
-			headers.set("token", requestModel.getTbaToken());
-			Claims claims = tokenUtil.claims(headers);
+			Claims claims = tokenUtil.claims(requestModel);
 			responseModel.setClaims(claims);
 			
 			responseModel.setStatus("200");
@@ -154,13 +161,24 @@ public class AuthController {
 		}
 		
 		responseEntity = new ResponseEntity<>(responseModel, responseModel.getStatus().equals("200") ? HttpStatus.OK : HttpStatus.INTERNAL_SERVER_ERROR);
-		log.info("postGenerate responseEntity : " + objectMapper.writeValueAsString(responseEntity));
+		log.info("[fid:" + fid + "] responseEntity : " + objectMapper.writeValueAsString(responseEntity));
 
 		return responseEntity;
 	}
 	
 	@GetMapping("/invalidate/{tbaEmail}")
-	public HttpEntity<?> getInvalidate(@PathVariable String tbaEmail) throws JsonProcessingException {
+	public HttpEntity<?> getInvalidate(@RequestParam String email, @RequestParam String token, @RequestParam String requestId, @RequestParam String requestDate, @PathVariable String tbaEmail) throws Exception {
+		AuthInvalidateRequestModel requestModel = new AuthInvalidateRequestModel();
+		requestModel.setEmail(email);
+		requestModel.setToken(token);
+		requestModel.setRequestId(requestId);
+		requestModel.setRequestDate(requestDate);
+		
+		String fid = new Uid().generateString(20);
+		log.info("[fid:" + fid + "] requestModel : " + objectMapper.writeValueAsString(requestModel));
+		
+		tokenUtil.claims(requestModel);
+		
 		AuthInvalidateResponseModel responseModel = new AuthInvalidateResponseModel(null);
 		ResponseEntity<?> responseEntity = null;
 		
@@ -181,7 +199,7 @@ public class AuthController {
 		});
 		
 		responseEntity = new ResponseEntity<>(responseModel, responseModel.getStatus().equals("200") ? HttpStatus.OK : HttpStatus.NOT_FOUND);
-		log.info("getInvalidate responseEntity : " + objectMapper.writeValueAsString(responseEntity));
+		log.info("[fid:" + fid + "] responseEntity : " + objectMapper.writeValueAsString(responseEntity));
 
 		return responseEntity;
 	}

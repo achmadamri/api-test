@@ -8,9 +8,9 @@ import java.util.HashMap;
 import java.util.Random;
 
 import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.web.client.RestTemplate;
 
+import com.api.mt.auth.model.RequestModel;
 import com.api.mt.auth.model.auth.TokenSyncRequestModel;
 
 import io.jsonwebtoken.Claims;
@@ -80,7 +80,7 @@ public class TokenUtil {
 		}
 	}
 
-	public Claims claims(HttpHeaders headers) throws Exception {
-		return Jwts.parser().setSigningKey(keyMap.get(headers.getFirst("email"))).parseClaimsJws(headers.getFirst("token")).getBody();
+	public Claims claims(RequestModel requestModel) throws Exception {
+		return Jwts.parser().setSigningKey(keyMap.get(requestModel.getEmail())).parseClaimsJws(requestModel.getToken()).getBody();
 	}
 }

@@ -1,15 +1,13 @@
 package com.api.mt.auth.model.auth;
 
-import org.springframework.http.HttpHeaders;
-
 import com.api.mt.auth.model.ResponseModel;
 
 import io.jsonwebtoken.Claims;
 
 public class AuthGenerateResponseModel extends ResponseModel {
 
-	public AuthGenerateResponseModel(HttpHeaders headers) {
-		super(headers);
+	public AuthGenerateResponseModel(AuthGenerateRequestModel requestModel) {
+		super(requestModel);
 	}
 
 	private String token;

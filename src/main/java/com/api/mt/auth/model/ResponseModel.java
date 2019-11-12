@@ -4,16 +4,14 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Random;
 
-import org.springframework.http.HttpHeaders;
-
 public class ResponseModel {
 	
-	public ResponseModel(HttpHeaders headers) {
-		this.setRequestId(headers.getFirst("requestid"));
+	public ResponseModel(RequestModel requestModel) {
+		this.setRequestId(requestModel.getRequestId());
 		
-		this.setRequestDate(headers.getFirst("requestdate"));
+		this.setRequestDate(requestModel.getRequestDate());
 		
-		this.setResponseId(this.getRequestId() + "-" + generateString(10));
+		this.setResponseId(this.getRequestId() + "-" + this.generateString(10));
 		
 		this.setResponseDate(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
 	}

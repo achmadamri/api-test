@@ -1,15 +1,13 @@
 package com.api.mt.auth.model.auth;
 
-import org.springframework.http.HttpHeaders;
-
 import com.api.mt.auth.model.ResponseModel;
 
 import io.jsonwebtoken.Claims;
 
 public class AuthCheckResponseModel extends ResponseModel {
 	
-	public AuthCheckResponseModel(HttpHeaders headers) {
-		super(headers);
+	public AuthCheckResponseModel(AuthCheckRequestModel requestModel) {
+		super(requestModel);
 	}
 	
 	private Claims claims;
