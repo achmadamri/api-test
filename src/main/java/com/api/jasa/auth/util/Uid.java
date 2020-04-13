@@ -1,4 +1,4 @@
-package com.api.mt.auth.util;
+package com.api.jasa.auth.util;
 
 import java.util.Random;
 
