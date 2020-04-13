@@ -1,4 +1,4 @@
-package com.api.mt.auth;
+package com.api.jasa.auth;
 
 import org.junit.Test;
 import org.springframework.boot.test.context.SpringBootTest;

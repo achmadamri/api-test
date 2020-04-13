@@ -1,4 +1,4 @@
-package com.api.mt.auth;
+package com.api.jasa.auth;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
